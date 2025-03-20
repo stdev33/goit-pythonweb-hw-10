@@ -1,6 +1,6 @@
-# goit-pythonweb-hw-01
+# goit-pythonweb-hw-10
 
-Homework 1. Fullstack Web Development with Python at GoIT Neoversity
+Homework 10. Fullstack Web Development with Python at GoIT Neoversity
 
 
 
