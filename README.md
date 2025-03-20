@@ -22,14 +22,14 @@ Before running the application, ensure you have:
 ### Step 1: Create Docker Network
 To ensure that the containers communicate properly, create a dedicated Docker network:
 ```bash
-docker network create goit-pythonweb-hw-08-network
+docker network create goit-pythonweb-hw-10-network
 ```
 
 ### Step 2: Start the PostgreSQL Container
 Run the following command to start the PostgreSQL database:
 ```bash
-docker run --name goit-pythonweb-hw-08-postgres \
-  --network goit-pythonweb-hw-08-network \
+docker run --name goit-pythonweb-hw-10-postgres \
+  --network goit-pythonweb-hw-10-network \
   -p 5432:5432 \
   -e POSTGRES_PASSWORD=qumtum-dizsof-1tyRmu \
   -e POSTGRES_DB=contacts_db \
@@ -46,7 +46,7 @@ docker build -t contacts_api .
 Run the following command to start the API container:
 ```bash
 docker run --name contacts_api \
-  --network goit-pythonweb-hw-08-network \
+  --network goit-pythonweb-hw-10-network \
   -p 8000:8000 \
   --env-file .env \
   contacts_api
@@ -100,7 +100,7 @@ Once the API container is running, you can access the Swagger documentation at:
 ## Notes
 - Ensure that `.env` file exist and is correctly configured with the following content:
 ```env
-DATABASE_URL=postgresql://postgres:dbpassword@goit-pythonweb-hw-08-postgres:5432/contacts_db
+DATABASE_URL=postgresql://postgres:dbpassword@goit-pythonweb-hw-10-postgres:5432/contacts_db
 ```
 
 
