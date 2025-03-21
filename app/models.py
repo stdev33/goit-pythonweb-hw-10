@@ -24,3 +24,4 @@ class User(Base):
     is_active = Column(Boolean, default=True)
     is_verified = Column(Boolean, default=False)
     verification_token = Column(String, nullable=True)
+    avatar_url = Column(String, nullable=True)

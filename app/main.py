@@ -1,9 +1,10 @@
 from . import crud, models, schemas
 from .auth import get_current_user
 from .auth import router as auth_router
+from .cloudinary_service import upload_avatar
 from .database import engine, get_db
 from dotenv import load_dotenv
-from fastapi import FastAPI, Depends, HTTPException, Request
+from fastapi import FastAPI, Depends, HTTPException, Request, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from slowapi import Limiter
@@ -56,6 +57,28 @@ async def read_users_me(
     request: Request, current_user: schemas.UserResponse = Depends(get_current_user)
 ):
     return current_user
+
+
+@app.post("/upload-avatar", response_model=schemas.UserResponse)
+async def upload_avatar_route(
+    file: UploadFile = File(...),
+    current_user: schemas.UserResponse = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    file_path = f"temp_{file.filename}"
+    with open(file_path, "wb") as buffer:
+        buffer.write(file.file.read())
+
+    avatar_url = upload_avatar(file_path, public_id=str(current_user.id))
+
+    user = db.query(models.User).filter(models.User.id == current_user.id).first()
+    user.avatar_url = avatar_url
+    db.commit()
+    db.refresh(user)
+
+    os.remove(file_path)
+
+    return user
 
 
 @app.post("/contacts/", response_model=schemas.ContactResponse, status_code=201)
