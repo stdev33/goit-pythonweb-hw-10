@@ -28,14 +28,17 @@ class ContactResponse(ContactBase):
 
 
 class UserCreate(BaseModel):
+    username: str
     email: EmailStr
     password: str
 
 
 class UserResponse(BaseModel):
     id: int
+    username: str
     email: str
     is_active: bool
+    is_verified: bool
 
     class Config:
         from_attributes = True

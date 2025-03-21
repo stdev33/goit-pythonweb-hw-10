@@ -7,7 +7,11 @@ from sqlalchemy.orm import Session
 from passlib.context import CryptContext
 from . import models, schemas
 from .database import get_db
+from .email import send_verification_email
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = os.getenv("ALGORITHM")
@@ -66,6 +70,12 @@ async def get_current_user(
     return user
 
 
+def create_verification_token(email: str) -> str:
+    expire = datetime.utcnow() + timedelta(hours=24)
+    data = {"sub": email, "exp": expire}
+    return jwt.encode(data, SECRET_KEY, algorithm=ALGORITHM)
+
+
 @router.post(
     "/register",
     response_model=schemas.UserResponse,
@@ -78,12 +88,46 @@ def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     if existing_user:
         raise HTTPException(status_code=409, detail="Email already registered")
 
+    verification_token = create_verification_token(user.email)
     hashed_password = get_password_hash(user.password)
-    db_user = models.User(email=user.email, hashed_password=hashed_password)
+    db_user = models.User(
+        username=user.username,
+        email=user.email,
+        hashed_password=hashed_password,
+        verification_token=verification_token,
+        is_verified=False,
+        is_active=True,
+    )
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
+
+    send_verification_email(user.email, verification_token)
+
     return db_user
+
+
+@router.get("/verify-email")
+def verify_email(token: str, db: Session = Depends(get_db)):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        email = payload.get("sub")
+        if not email:
+            raise HTTPException(status_code=400, detail="Invalid token")
+
+        user = db.query(models.User).filter(models.User.email == email).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        if user.is_verified:
+            raise HTTPException(status_code=400, detail="User already verified")
+
+        user.is_verified = True
+        db.commit()
+
+        return {"message": "Email successfully verified!"}
+    except JWTError:
+        raise HTTPException(status_code=400, detail="Invalid token or expired link")
 
 
 @router.post("/login", response_model=schemas.Token)
