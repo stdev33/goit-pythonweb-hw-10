@@ -123,6 +123,7 @@ def verify_email(token: str, db: Session = Depends(get_db)):
             raise HTTPException(status_code=400, detail="User already verified")
 
         user.is_verified = True
+        user.verification_token = None
         db.commit()
 
         return {"message": "Email successfully verified!"}

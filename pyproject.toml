@@ -6,7 +6,7 @@ authors = [
     {name = "Serhii Tarasenko",email = "stdev33@gmail.com"}
 ]
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.13,<4.0"
 dependencies = [
     "annotated-types (==0.7.0)",
     "anyio (==4.8.0)",
@@ -32,7 +32,8 @@ dependencies = [
     "alembic (>=1.15.1,<2.0.0)",
     "python-jose[cryptography] (>=3.4.0,<4.0.0)",
     "python-multipart (>=0.0.20,<0.0.21)",
-    "sendgrid (>=6.11.0,<7.0.0)"
+    "sendgrid (>=6.11.0,<7.0.0)",
+    "slowapi (>=0.1.9,<0.2.0)"
 ]
 
 

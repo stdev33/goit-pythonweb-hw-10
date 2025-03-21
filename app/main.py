@@ -1,15 +1,40 @@
-from fastapi import FastAPI, Depends, HTTPException
-from sqlalchemy.orm import Session
 from . import crud, models, schemas
-from .database import engine, get_db
 from .auth import get_current_user
 from .auth import router as auth_router
+from .database import engine, get_db
+from fastapi import FastAPI, Depends, HTTPException, Request
+from fastapi.responses import JSONResponse
+from slowapi import Limiter
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
+from slowapi.util import get_remote_address
+from sqlalchemy.orm import Session
 
 app = FastAPI()
 
 models.Base.metadata.create_all(bind=engine)
 
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_middleware(SlowAPIMiddleware)
+
 app.include_router(auth_router)
+
+
+@app.exception_handler(RateLimitExceeded)
+async def rate_limit_exceeded_handler(request, exc):
+    return JSONResponse(
+        status_code=429,
+        content={"error": "Too many requests. Please try again later."},
+    )
+
+
+@app.get("/me")
+@limiter.limit("5/minute")
+async def read_users_me(
+    request: Request, current_user: schemas.UserResponse = Depends(get_current_user)
+):
+    return current_user
 
 
 @app.post("/contacts/", response_model=schemas.ContactResponse, status_code=201)
